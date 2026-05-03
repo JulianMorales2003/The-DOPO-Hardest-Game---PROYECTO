@@ -149,7 +149,8 @@ public class MainMenuView extends JFrame {
     }
 
     private void openModes() {
-        JOptionPane.showMessageDialog(this, "Próximamente: modos de juego");
+        new GameModesView(this).setVisible(true);
+        setVisible(false);
     }
 
     private void openCredits() {
