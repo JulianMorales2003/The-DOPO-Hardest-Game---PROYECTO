@@ -1,6 +1,4 @@
-package com.dopo.game;
-
-import com.dopo.game.presentation.views.MainMenuView;
+import presentation.MainMenuView;
 import javax.swing.*;
 
 public class Main {
