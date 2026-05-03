@@ -19,31 +19,12 @@ public class MainMenuView extends JFrame {
         root.setBackground(BG);
         root.setBorder(BorderFactory.createLineBorder(new Color(80, 100, 150), 4));
 
-        root.add(buildTopBar(),  BorderLayout.NORTH);
         root.add(buildTitle(),   BorderLayout.CENTER);
         root.add(buildButtons(), BorderLayout.SOUTH);
 
         setContentPane(root);
-        setSize(600, 380);
+        setSize(750, 480);
         setLocationRelativeTo(null);
-    }
-
-    private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(BG);
-        bar.setBorder(BorderFactory.createEmptyBorder(12, 16, 0, 16));
-
-        JLabel left = new JLabel("THE DOPO'S...");
-        left.setFont(new Font("Arial", Font.BOLD, 14));
-        left.setForeground(new Color(30, 30, 80));
-
-        JLabel right = new JLabel("VERSION 1.0");
-        right.setFont(new Font("Arial", Font.BOLD, 14));
-        right.setForeground(new Color(30, 30, 80));
-
-        bar.add(left,  BorderLayout.WEST);
-        bar.add(right, BorderLayout.EAST);
-        return bar;
     }
 
     private JPanel buildTitle() {
@@ -57,21 +38,31 @@ public class MainMenuView extends JFrame {
 
                 int w = getWidth(), h = getHeight();
 
-                // Título principal
-                g2.setFont(new Font("Arial Black", Font.BOLD, 62));
-                FontMetrics fm = g2.getFontMetrics();
-                String line = "HARDEST GAME";
-                int x = (w - fm.stringWidth(line)) / 2;
-                int y = h / 2 + 20;
+                // "THE DOPO'S..." pequeño arriba pegado al título
+                g2.setFont(new Font("Arial", Font.BOLD, 15));
+                FontMetrics fmSmall = g2.getFontMetrics();
+                String small = "THE DOPO'S...";
+                int sx = (w - fmSmall.stringWidth(small)) / 2;
+                g2.setColor(new Color(30, 30, 80));
+                g2.drawString(small, sx, h / 2 - 10);
 
+                // "HARDEST GAME" grande justo debajo
+                g2.setFont(new Font("Arial Black", Font.BOLD, 72));
+                FontMetrics fmBig = g2.getFontMetrics();
+                String big = "HARDEST GAME";
+                int bx = (w - fmBig.stringWidth(big)) / 2;
+                int by = h / 2 + 60;
+
+                // Sombra
                 g2.setColor(TITLE_SHADOW);
-                g2.drawString(line, x + 4, y + 4);
+                g2.drawString(big, bx + 4, by + 4);
+                // Título rojo
                 g2.setColor(TITLE_RED);
-                g2.drawString(line, x, y);
+                g2.drawString(big, bx, by);
             }
         };
         panel.setBackground(BG);
-        panel.setPreferredSize(new Dimension(600, 160));
+        panel.setPreferredSize(new Dimension(750, 280));
         return panel;
     }
 
@@ -79,10 +70,9 @@ public class MainMenuView extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 30));
         panel.setBackground(BG);
 
-        panel.add(buildArcadeButton("PLAY\nGAME", new Color(180, 20, 20),
-                e -> openModes()));
-        panel.add(buildArcadeButton("LOAD\nGAME", new Color(20, 20, 160), null));
-        panel.add(buildArcadeButton("LEVEL\nSELECT", new Color(20, 130, 20), null));
+        panel.add(buildArcadeButton("PLAY\nGAME",   new Color(180, 20, 20),  e -> openModes()));
+        panel.add(buildArcadeButton("LOAD\nGAME",   new Color(20, 20, 160),  null));
+        panel.add(buildArcadeButton("DESIGN\nBY",   new Color(20, 130, 20),  e -> openCredits()));
 
         return panel;
     }
@@ -121,7 +111,6 @@ public class MainMenuView extends JFrame {
 
                 int w = getWidth(), h = getHeight();
 
-                // Fondo del botón
                 Color bg = !enabled
                         ? new Color(100, 100, 110)
                         : hovered ? baseColor.brighter() : baseColor;
@@ -132,7 +121,6 @@ public class MainMenuView extends JFrame {
                 g2.drawRoundRect(1, 1, w - 2, h - 2, 10, 10);
                 g2.setStroke(new BasicStroke(1f));
 
-                // Texto estilo arcade con sombra
                 g2.setFont(new Font("Arial Black", Font.BOLD, 17));
                 FontMetrics fm = g2.getFontMetrics();
                 int lineH = fm.getHeight();
@@ -141,15 +129,12 @@ public class MainMenuView extends JFrame {
                 for (int i = 0; i < lines.length; i++) {
                     int lx = (w - fm.stringWidth(lines[i])) / 2;
                     int ly = startY + i * lineH;
-                    // Sombra
                     g2.setColor(new Color(0, 0, 0, 120));
                     g2.drawString(lines[i], lx + 2, ly + 2);
-                    // Texto blanco
                     g2.setColor(Color.WHITE);
                     g2.drawString(lines[i], lx, ly);
                 }
 
-                // Overlay bloqueado
                 if (!enabled) {
                     g2.setColor(new Color(0, 0, 0, 60));
                     g2.fillRoundRect(0, 0, w, h, 10, 10);
@@ -166,5 +151,52 @@ public class MainMenuView extends JFrame {
 
     private void openModes() {
         JOptionPane.showMessageDialog(this, "Próximamente: modos de juego");
+    }
+
+    private void openCredits() {
+        JDialog dialog = new JDialog(this, "Créditos", true);
+        dialog.setResizable(false);
+        dialog.setSize(460, 300);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel();
+        panel.setBackground(BG);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        panel.add(buildCreditLabel("Diseño Orientado a Programación de Objetos", Font.BOLD, 14));
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(buildCreditLabel("2026-1", Font.PLAIN, 13));
+        panel.add(Box.createVerticalStrut(6));
+        panel.add(buildCreditLabel("Profesor: Juan Frasica", Font.PLAIN, 13));
+        panel.add(Box.createVerticalStrut(20));
+        panel.add(buildCreditLabel("Desarrolladores:", Font.BOLD, 13));
+        panel.add(Box.createVerticalStrut(6));
+        panel.add(buildCreditLabel("Julian Felipe Morales Zambrano", Font.PLAIN, 13));
+        panel.add(Box.createVerticalStrut(4));
+        panel.add(buildCreditLabel("Sergio Daniel Buitrago Suancha", Font.PLAIN, 13));
+        panel.add(Box.createVerticalStrut(24));
+
+        JButton close = new JButton("Cerrar");
+        close.setAlignmentX(Component.CENTER_ALIGNMENT);
+        close.setFont(new Font("Arial", Font.BOLD, 13));
+        close.setBackground(new Color(180, 20, 20));
+        close.setForeground(Color.WHITE);
+        close.setFocusPainted(false);
+        close.setBorder(BorderFactory.createEmptyBorder(8, 24, 8, 24));
+        close.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        close.addActionListener(e -> dialog.dispose());
+        panel.add(close);
+
+        dialog.setContentPane(panel);
+        dialog.setVisible(true);
+    }
+
+    private JLabel buildCreditLabel(String text, int style, int size) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", style, size));
+        label.setForeground(new Color(20, 20, 60));
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return label;
     }
 }
