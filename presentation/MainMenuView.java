@@ -36,33 +36,32 @@ public class MainMenuView extends JFrame {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-                int w = getWidth(), h = getHeight();
+                int w = getWidth();
 
-                // "THE DOPO'S..." pequeño arriba pegado al título
-                g2.setFont(new Font("Arial", Font.BOLD, 15));
-                FontMetrics fmSmall = g2.getFontMetrics();
-                String small = "THE DOPO'S...";
-                int sx = (w - fmSmall.stringWidth(small)) / 2;
-                g2.setColor(new Color(30, 30, 80));
-                g2.drawString(small, sx, h / 2 - 10);
-
-                // "HARDEST GAME" grande justo debajo
+                // Calcular posición X del título grande primero
                 g2.setFont(new Font("Arial Black", Font.BOLD, 72));
                 FontMetrics fmBig = g2.getFontMetrics();
                 String big = "HARDEST GAME";
                 int bx = (w - fmBig.stringWidth(big)) / 2;
-                int by = h / 2 + 60;
+                int by = 95;
 
-                // Sombra
+                // "THE DOPO'S..." dibujado ANTES del título grande
+                g2.setFont(new Font("Arial", Font.BOLD, 15));
+                g2.setColor(new Color(30, 30, 80));
+                g2.drawString("THE DOPO'S...", bx, 20);
+
+                // Sombra del título grande
+                g2.setFont(new Font("Arial Black", Font.BOLD, 72));
                 g2.setColor(TITLE_SHADOW);
                 g2.drawString(big, bx + 4, by + 4);
-                // Título rojo
+
+                // Título rojo encima
                 g2.setColor(TITLE_RED);
                 g2.drawString(big, bx, by);
             }
         };
         panel.setBackground(BG);
-        panel.setPreferredSize(new Dimension(750, 280));
+        panel.setPreferredSize(new Dimension(750, 120));
         return panel;
     }
 
