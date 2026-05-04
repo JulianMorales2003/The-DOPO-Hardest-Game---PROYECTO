@@ -182,6 +182,11 @@ public class GameModesView extends JFrame {
     }
 
     private void launchSolo() {
-        JOptionPane.showMessageDialog(this, "Lanzando modo Solo... (próximamente)");
+        String name = JOptionPane.showInputDialog(
+            this, "Nombre del jugador:", "The DOPO Hardest Game",
+            JOptionPane.PLAIN_MESSAGE);
+        if (name == null || name.isBlank()) return;
+        new GameView(this, name).setVisible(true);
+        setVisible(false);
     }
 }
