@@ -4,13 +4,13 @@ import java.awt.Color;
 
 public abstract class Enemy {
 
-    protected int x;
-    protected int y;
-    protected int size;
-    protected double speed;
-    protected Color color;
-    protected double dx;
-    protected double dy;
+    public int x;
+    public int y;
+    public int size;
+    public double speed;
+    public Color color;
+    public double dx;
+    public double dy;
 
     public Enemy(int x, int y, double dx, double dy) {
         this.x     = x;

@@ -48,8 +48,7 @@ public class GameView extends JFrame implements KeyListener {
         player  = new RedPlayer(playerName, 20, MAP_H / 2 - 15);
         enemies = new ArrayList<>();
         enemies.add(new BasicEnemy(300, 200,  1,  0));
-        enemies.add(new BasicEnemy(500,  80,  0,  1));
-        enemies.add(new BasicEnemy(200, 350, -1,  1));
+        
         coins = new ArrayList<>();
         coins.add(new Coin(180, 140));
         coins.add(new Coin(320, 240));
@@ -83,7 +82,7 @@ public class GameView extends JFrame implements KeyListener {
         setLocationRelativeTo(null);
         addKeyListener(this);
 
-        // Game loop 60fps
+        
         gameLoop = new Timer(16, e -> {
             handleMovement();
             for (BasicEnemy en : enemies) en.update(MAP_W, MAP_H);
@@ -124,7 +123,7 @@ public class GameView extends JFrame implements KeyListener {
         // Centro: monedas
         long left = coins.stream().filter(c -> !c.collected).count();
         g.setColor(new Color(255, 215, 0));
-        g.fillOval(MAP_W / 2 - 60, 18, 14, 14));
+        g.fillOval(MAP_W / 2 - 60, 18, 14, 14);
         g.setColor(Color.BLACK);
         g.drawOval(MAP_W / 2 - 60, 18, 14, 14);
         g.setFont(new Font("Arial", Font.BOLD, 13));
