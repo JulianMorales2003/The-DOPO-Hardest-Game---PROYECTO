@@ -51,10 +51,6 @@ public class GameView extends JFrame implements KeyListener {
         
         coins = new ArrayList<>();
         coins.add(new Coin(180, 140));
-        coins.add(new Coin(320, 240));
-        coins.add(new Coin(460, 140));
-        coins.add(new Coin(580, 300));
-        coins.add(new Coin(670, 190));
 
         // Panel de juego
         JPanel panel = new JPanel() {
