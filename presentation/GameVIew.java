@@ -242,8 +242,6 @@ public class GameView extends JFrame implements KeyListener {
     private void resetEnemies() {
         enemies.clear();
         enemies.add(new BasicEnemy(300, 200,  1,  0));
-        enemies.add(new BasicEnemy(500,  80,  0,  1));
-        enemies.add(new BasicEnemy(200, 350, -1,  1));
     }
 
     private void resetCoins() {
