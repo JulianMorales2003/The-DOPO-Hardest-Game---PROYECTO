@@ -12,7 +12,12 @@ public class Map {
     protected int cellSize;
     protected List<Coin> coins;
     protected List<Enemy> enemies;
-
+/**
+* Crea un mapa con las dimensiones indicadas.
+*
+* @param width  ancho del tablero en píxeles
+* @param height alto del tablero en píxeles
+*/
     public Map(int width, int height) {
         this.width    = width;
         this.height   = height;
