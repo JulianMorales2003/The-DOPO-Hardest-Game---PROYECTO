@@ -2,6 +2,9 @@ package domain;
 
 import java.awt.Color;
 
+/**
+ * Clase abstracta que representa un jugador en el juego.
+ */
 public abstract class Player {
 
     public String name;
@@ -15,6 +18,13 @@ public abstract class Player {
     public int spawnX;
     public int spawnY;
 
+    /**
+     * Constructor base del jugador.
+     *
+     * @param name nombre del jugador
+     * @param x    posición inicial en el eje X
+     * @param y    posición inicial en el eje Y
+     */
     public Player(String name, int x, int y) {
         this.name           = name;
         this.x              = x;
