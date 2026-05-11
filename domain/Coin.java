@@ -8,7 +8,12 @@ public class Coin {
     public int y;
     public int size;
     public boolean collected;
-
+    /**
+     * Crea una moneda en la posición indicada, sin recolectar.
+     *
+     * @param x posición en el eje X
+     * @param y posición en el eje Y
+     */
     public Coin(int x, int y) {
         this.x         = x;
         this.y         = y;
