@@ -1,9 +1,5 @@
 package presentation;
 
-import domain.levels.Level;
-import domain.levels.Level1;
-import domain.levels.Level2;
-import domain.levels.Level3;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
