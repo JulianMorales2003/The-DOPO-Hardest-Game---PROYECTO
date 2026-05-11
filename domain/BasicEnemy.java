@@ -1,7 +1,9 @@
 package domain;
 
 import java.awt.Color;
-
+/**
+ * Enemigo básico que se mueve en línea recta y rebota en los bordes.
+ */
 public class BasicEnemy extends Enemy {
 
     public BasicEnemy(int x, int y, double dx, double dy) {
