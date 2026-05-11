@@ -113,7 +113,8 @@ public class GameView extends JFrame implements KeyListener {
 
         addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent e) {
-                exitToMenu();
+                gameLoop.stop();
+                System.exit(0);
             }
         });
     }
