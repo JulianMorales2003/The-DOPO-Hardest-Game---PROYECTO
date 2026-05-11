@@ -14,3 +14,4 @@ public class Coin {
         this.collected = false;
     }
 }
+
