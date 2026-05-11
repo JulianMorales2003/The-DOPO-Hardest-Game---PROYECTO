@@ -1,5 +1,7 @@
 package domain;
-
+/**
+ * Representa una moneda estática en el tablero del juego.
+ */
 public class Coin {
 
     public int x;
