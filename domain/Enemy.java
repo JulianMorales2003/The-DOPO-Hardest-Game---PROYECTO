@@ -1,7 +1,9 @@
 package domain;
 
 import java.awt.Color;
-
+/**
+ * Clase abstracta que representa un enemigo en el juego.
+ */
 public abstract class Enemy {
 
     public int x;
