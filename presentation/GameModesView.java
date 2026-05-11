@@ -1,5 +1,9 @@
 package presentation;
 
+import domain.levels.Level;
+import domain.levels.Level1;
+import domain.levels.Level2;
+import domain.levels.Level3;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,11 +20,22 @@ public class GameModesView extends JFrame {
 
     private final JFrame previous;
 
+    /**
+     * Crea la ventana de selección de modos de juego.
+     *
+     * @param previous ventana anterior para poder regresar
+     */
     public GameModesView(JFrame previous) {
         this.previous = previous;
         setTitle("The DOPO Hardest Game - Modos");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setResizable(false);
+
+        addWindowListener(new WindowAdapter() {
+            @Override public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
 
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(BG);
@@ -35,6 +50,11 @@ public class GameModesView extends JFrame {
         setLocationRelativeTo(null);
     }
 
+    /**
+     * Construye el panel del título de la ventana.
+     *
+     * @return panel con el título dibujado
+     */
     private JPanel buildTitle() {
         JPanel panel = new JPanel() {
             @Override
@@ -62,12 +82,16 @@ public class GameModesView extends JFrame {
         return panel;
     }
 
+    /**
+     * Construye el panel con las tarjetas de modos de juego.
+     *
+     * @return panel con los tres modos
+     */
     private JPanel buildModes() {
         JPanel panel = new JPanel(new GridLayout(1, 3, 20, 0));
         panel.setBackground(BG);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        // Solo Player — habilitado
         panel.add(buildModeCard(
             "SOLO\nPLAYER",
             "Un jugador controla\nel cuadrado rojo.\nRecolecta monedas\ny llega a la meta.",
@@ -77,7 +101,6 @@ public class GameModesView extends JFrame {
             e -> launchSolo()
         ));
 
-        // Player vs Player — bloqueado
         panel.add(buildModeCard(
             "PLAYER\nvs PLAYER",
             "Dos jugadores\ncompiten en el\nmismo tablero.\nGana el más rápido.",
@@ -87,7 +110,6 @@ public class GameModesView extends JFrame {
             null
         ));
 
-        // Player vs Machine — bloqueado
         panel.add(buildModeCard(
             "PLAYER\nvs MACHINE",
             "Compite contra\nla máquina en\nel mismo tablero.\n¿Puedes ganarle?",
@@ -100,6 +122,17 @@ public class GameModesView extends JFrame {
         return panel;
     }
 
+    /**
+     * Construye una tarjeta de modo de juego.
+     *
+     * @param title    título del modo
+     * @param desc     descripción del modo
+     * @param controls controles del modo
+     * @param color    color del modo
+     * @param enabled  si el modo está habilitado
+     * @param action   acción al hacer clic
+     * @return panel con la tarjeta del modo
+     */
     private JPanel buildModeCard(String title, String desc, String controls,
                                   Color color, boolean enabled, ActionListener action) {
         JPanel card = new JPanel();
@@ -110,7 +143,6 @@ public class GameModesView extends JFrame {
             BorderFactory.createEmptyBorder(16, 14, 16, 14)
         ));
 
-        // Título de la tarjeta
         String[] titleLines = title.split("\n");
         for (String line : titleLines) {
             JLabel lbl = new JLabel(line);
@@ -122,7 +154,6 @@ public class GameModesView extends JFrame {
 
         card.add(Box.createVerticalStrut(10));
 
-        // Descripción
         String[] descLines = desc.split("\n");
         for (String line : descLines) {
             JLabel lbl = new JLabel(line);
@@ -134,7 +165,6 @@ public class GameModesView extends JFrame {
 
         card.add(Box.createVerticalStrut(10));
 
-        // Controles
         JLabel ctrl = new JLabel(controls);
         ctrl.setFont(new Font("Monospaced", Font.BOLD, 11));
         ctrl.setForeground(new Color(80, 80, 100));
@@ -144,7 +174,6 @@ public class GameModesView extends JFrame {
         card.add(Box.createVerticalGlue());
         card.add(Box.createVerticalStrut(12));
 
-        // Botón
         JButton btn = new JButton(enabled ? "JUGAR" : "Próximamente");
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
         btn.setFont(new Font("Arial Black", Font.BOLD, 13));
@@ -162,6 +191,11 @@ public class GameModesView extends JFrame {
         return card;
     }
 
+    /**
+     * Construye el panel inferior con el botón de volver.
+     *
+     * @return panel con el botón de volver
+     */
     private JPanel buildBack() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 12));
         panel.setBackground(BG);
@@ -181,6 +215,9 @@ public class GameModesView extends JFrame {
         return panel;
     }
 
+    /**
+     * Lanza el juego en modo solo pidiendo el nombre del jugador.
+     */
     private void launchSolo() {
         String name = JOptionPane.showInputDialog(
             this, "Nombre del jugador:", "The DOPO Hardest Game",
