@@ -19,7 +19,13 @@ public class BasicEnemy extends Enemy {
         this.size  = 28;
         this.color = new Color(30, 100, 220);
     }
-
+ /**
+     * Mueve el enemigo y lo hace rebotar al llegar a los bordes del tablero.
+     *
+     * @param mapW ancho del tablero en píxeles
+     * @param mapH alto del tablero en píxeles
+     */
+    @Override
     public void update(int mapW, int mapH) {
         x += dx * speed;
         y += dy * speed;
