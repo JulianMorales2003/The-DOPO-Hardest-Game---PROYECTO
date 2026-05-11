@@ -2,7 +2,9 @@ package domain;
 
 import java.util.List;
 import java.util.ArrayList;
-
+/**
+ * Representa el tablero de un nivel del juego.
+ */
 public class Map {
 
     protected int width;
