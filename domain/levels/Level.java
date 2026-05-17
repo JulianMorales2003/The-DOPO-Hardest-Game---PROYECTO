@@ -2,6 +2,7 @@ package domain.levels;
 
 import domain.BasicEnemy;
 import domain.Coin;
+import domain.Wall;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -14,6 +15,7 @@ public abstract class Level {
 
     protected List<BasicEnemy> enemies;
     protected List<Coin> coins;
+    protected List<Wall> walls;
     protected int numero;
     protected String nombre;
 
@@ -28,11 +30,12 @@ public abstract class Level {
         this.nombre  = nombre;
         this.enemies = new ArrayList<>();
         this.coins   = new ArrayList<>();
+        this.walls   = new ArrayList<>();
         inicializar();
     }
 
     /**
-     * Inicializa los enemigos y monedas del nivel.
+     * Inicializa los enemigos, monedas y paredes del nivel.
      * Cada subclase define su propia configuración.
      */
     protected abstract void inicializar();
@@ -43,6 +46,7 @@ public abstract class Level {
     public void reiniciar() {
         enemies.clear();
         coins.clear();
+        walls.clear();
         inicializar();
     }
 
@@ -59,6 +63,13 @@ public abstract class Level {
      * @return lista de monedas
      */
     public List<Coin> getCoins() { return coins; }
+
+    /**
+     * Retorna la lista de paredes del nivel.
+     *
+     * @return lista de paredes
+     */
+    public List<Wall> getWalls() { return walls; }
 
     /**
      * Retorna el número del nivel.
