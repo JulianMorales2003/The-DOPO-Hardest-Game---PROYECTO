@@ -4,7 +4,6 @@ import domain.GameFacade;
 import domain.BasicEnemy;
 import domain.Coin;
 import domain.Wall;
-import exceptions.DopoGameException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
