@@ -20,13 +20,13 @@ public class GameView extends JFrame implements KeyListener {
     private static final int SAFE_H = 120;
 
     // Colores
-    private static final Color BG        = new Color(204, 204, 204);
-    private static final Color GRID      = new Color(170, 170, 170);
-    private static final Color BORDER    = new Color(0, 0, 128);
-    private static final Color SAFE_FILL = new Color(0, 190, 100, 160);
-    private static final Color SAFE_LINE = new Color(0, 140, 60);
-    private static final Color HUD_BG    = new Color(230, 230, 240);
-    private static final Color HUD_TEXT  = new Color(20, 20, 20);
+    private static final Color BG         = new Color(204, 204, 204);
+    private static final Color GRID       = new Color(170, 170, 170);
+    private static final Color BORDER     = new Color(0, 0, 128);
+    private static final Color SAFE_FILL  = new Color(0, 190, 100, 160);
+    private static final Color SAFE_LINE  = new Color(0, 140, 60);
+    private static final Color HUD_BG     = new Color(230, 230, 240);
+    private static final Color HUD_TEXT   = new Color(20, 20, 20);
     private static final Color WALL_COLOR = new Color(80, 80, 100);
 
     // Fachada — único punto de contacto con el dominio
@@ -51,7 +51,6 @@ public class GameView extends JFrame implements KeyListener {
     public GameView(JFrame previous, String playerName) {
         this.previous = previous;
 
-        // La fachada valida el nombre y lanza DopoGameException si es inválido
         game = new GameFacade(playerName, 15, MAP_H / 2 - 15);
 
         setTitle("The DOPO Hardest Game");
@@ -76,6 +75,7 @@ public class GameView extends JFrame implements KeyListener {
                 drawBorder(g2);
                 g2.translate(0, -HUD_H);
                 if (game.isNivelCompleto()) drawNivelCompleto(g2);
+                if (game.isPausado())       drawPausa(g2);
             }
         };
 
@@ -87,7 +87,7 @@ public class GameView extends JFrame implements KeyListener {
         addKeyListener(this);
 
         gameLoop = new Timer(16, e -> {
-            if (!game.isNivelCompleto()) {
+            if (!game.isNivelCompleto() && !game.isPausado()) {
                 handleMovement();
                 game.actualizarEnemigos(MAP_W, MAP_H);
                 game.verificarColisiones();
@@ -163,7 +163,7 @@ public class GameView extends JFrame implements KeyListener {
         // Controles
         g.setFont(new Font("Arial", Font.PLAIN, 11));
         g.setColor(new Color(80, 80, 100));
-        g.drawString("[ESC] menú", MAP_W - 100, 30);
+        g.drawString("[P] pausa   [ESC] menú", MAP_W - 160, 30);
     }
 
     /**
@@ -198,7 +198,7 @@ public class GameView extends JFrame implements KeyListener {
     }
 
     /**
-     * Dibuja las zonas seguras de inicio y fin.
+     * Dibuja las zonas seguras de inicio, fin e intermedias.
      *
      * @param g contexto gráfico
      */
@@ -224,6 +224,21 @@ public class GameView extends JFrame implements KeyListener {
         g.setFont(new Font("Arial", Font.BOLD, 10));
         g.setColor(new Color(0, 80, 30));
         g.drawString("END", MAP_W - 45, MAP_H / 2 + 5);
+
+        // Zonas seguras intermedias
+        for (Rectangle zona : game.getZonasSeguras()) {
+            g.setColor(new Color(0, 190, 100, 120));
+            g.fillRect(zona.x, zona.y, zona.width, zona.height);
+            g.setColor(SAFE_LINE);
+            g.setStroke(new BasicStroke(2f));
+            g.drawRect(zona.x, zona.y, zona.width, zona.height);
+            g.setStroke(new BasicStroke(1f));
+            g.setFont(new Font("Arial", Font.BOLD, 9));
+            g.setColor(new Color(0, 80, 30));
+            g.drawString("SAFE",
+                zona.x + (zona.width - 28) / 2,
+                zona.y + zona.height / 2 + 4);
+        }
     }
 
     /**
@@ -326,6 +341,37 @@ public class GameView extends JFrame implements KeyListener {
         g.drawString(esc, MAP_W / 2 - fm.stringWidth(esc) / 2, by + 195);
     }
 
+    /**
+     * Dibuja la pantalla de pausa sobre el tablero.
+     *
+     * @param g contexto gráfico
+     */
+    private void drawPausa(Graphics2D g) {
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRect(0, 0, MAP_W, MAP_H + HUD_H);
+
+        int bx = MAP_W / 2 - 160;
+        int by = MAP_H / 2 - 60;
+        g.setColor(new Color(230, 230, 245));
+        g.fillRoundRect(bx, by, 320, 140, 20, 20);
+        g.setColor(new Color(0, 0, 128));
+        g.setStroke(new BasicStroke(3f));
+        g.drawRoundRect(bx, by, 320, 140, 20, 20);
+        g.setStroke(new BasicStroke(1f));
+
+        g.setFont(new Font("Arial Black", Font.BOLD, 30));
+        FontMetrics fm = g.getFontMetrics();
+        String titulo = "PAUSADO";
+        g.setColor(new Color(0, 0, 128));
+        g.drawString(titulo, MAP_W / 2 - fm.stringWidth(titulo) / 2, by + 55);
+
+        g.setFont(new Font("Arial", Font.PLAIN, 13));
+        g.setColor(new Color(80, 80, 100));
+        String sub = "Presiona P para continuar";
+        fm = g.getFontMetrics();
+        g.drawString(sub, MAP_W / 2 - fm.stringWidth(sub) / 2, by + 90);
+    }
+
     // ── KeyListener ───────────────────────────────────────────────────────────
 
     @Override
@@ -334,7 +380,7 @@ public class GameView extends JFrame implements KeyListener {
         if (e.getKeyCode() == KeyEvent.VK_DOWN)  down  = true;
         if (e.getKeyCode() == KeyEvent.VK_LEFT)  left  = true;
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) right = true;
-
+        if (e.getKeyCode() == KeyEvent.VK_P)     game.togglePausa();
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) exitToMenu();
 
         if (e.getKeyCode() == KeyEvent.VK_ENTER && game.isNivelCompleto()) {
