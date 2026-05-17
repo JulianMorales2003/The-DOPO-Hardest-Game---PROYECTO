@@ -1,25 +1,21 @@
 package presentation;
 
-import domain.*;
-import domain.levels.Level;
-import domain.levels.Level1;
-import domain.levels.Level2;
-import domain.levels.Level3;
+import domain.GameFacade;
+import domain.BasicEnemy;
+import domain.Coin;
+import domain.Wall;
 import exceptions.DopoGameException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
 
 public class GameView extends JFrame implements KeyListener {
 
     // Dimensiones del tablero
-    private static final int MAP_W = 800;
-    private static final int MAP_H = 520;
-    private static final int CELL  = 40;
-    private static final int HUD_H = 50;
-
-    // Zona segura
+    private static final int MAP_W  = 800;
+    private static final int MAP_H  = 520;
+    private static final int CELL   = 40;
+    private static final int HUD_H  = 50;
     private static final int SAFE_W = 60;
     private static final int SAFE_Y = MAP_H / 2 - 60;
     private static final int SAFE_H = 120;
@@ -32,46 +28,36 @@ public class GameView extends JFrame implements KeyListener {
     private static final Color SAFE_LINE = new Color(0, 140, 60);
     private static final Color HUD_BG    = new Color(230, 230, 240);
     private static final Color HUD_TEXT  = new Color(20, 20, 20);
+    private static final Color WALL_COLOR = new Color(80, 80, 100);
 
-    // Entidades
-    private RedPlayer player;
-    private List<BasicEnemy> enemies;
-    private List<Coin> coins;
+    // Fachada — único punto de contacto con el dominio
+    private final GameFacade game;
 
-    // Niveles
-    private Level nivelActual;
-    private int numeroNivel = 1;
+    // Estado de teclas
+    private boolean up, down, left, right;
 
-    // Estado
-    private int deaths = 0;
-    private boolean nivelCompleto = false;
+    // Zona final precalculada
+    private final Rectangle zonaFinal = new Rectangle(
+            MAP_W - SAFE_W, SAFE_Y, SAFE_W, SAFE_H);
+
     private final JFrame previous;
     private Timer gameLoop;
 
-    // Teclas
-    private boolean up, down, left, right;
-
     /**
-     * Crea la ventana del juego con el jugador y nivel inicializados.
+     * Crea la ventana del juego usando la fachada como único acceso al dominio.
      *
-     * @param previous   ventana anterior para poder regresar
-     * @param playerName nombre del jugador ingresado en el menú
+     * @param previous   ventana anterior para regresar
+     * @param playerName nombre del jugador
      */
     public GameView(JFrame previous, String playerName) {
         this.previous = previous;
 
-        if (playerName == null || playerName.isBlank()) {
-            throw new DopoGameException(
-                DopoGameException.ErrorCode.NOMBRE_JUGADOR_INVALIDO,
-                "El nombre del jugador no puede estar vacío"
-            );
-        }
+        // La fachada valida el nombre y lanza DopoGameException si es inválido
+        game = new GameFacade(playerName, 15, MAP_H / 2 - 15);
 
         setTitle("The DOPO Hardest Game");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setResizable(false);
-
-        inicializarEntidades(playerName);
 
         JPanel panel = new JPanel() {
             @Override
@@ -79,17 +65,18 @@ public class GameView extends JFrame implements KeyListener {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON);
+                        RenderingHints.VALUE_ANTIALIAS_ON);
                 drawHUD(g2);
                 g2.translate(0, HUD_H);
                 drawGrid(g2);
+                drawWalls(g2);
                 drawSafeZones(g2);
                 drawCoins(g2);
                 drawEnemies(g2);
                 drawPlayer(g2);
                 drawBorder(g2);
                 g2.translate(0, -HUD_H);
-                if (nivelCompleto) drawNivelCompleto(g2);
+                if (game.isNivelCompleto()) drawNivelCompleto(g2);
             }
         };
 
@@ -101,11 +88,11 @@ public class GameView extends JFrame implements KeyListener {
         addKeyListener(this);
 
         gameLoop = new Timer(16, e -> {
-            if (!nivelCompleto) {
+            if (!game.isNivelCompleto()) {
                 handleMovement();
-                for (BasicEnemy en : enemies) en.update(MAP_W, MAP_H);
-                checkCollisions();
-                checkNivelCompleto();
+                game.actualizarEnemigos(MAP_W, MAP_H);
+                game.verificarColisiones();
+                game.verificarNivelCompleto(zonaFinal);
             }
             panel.repaint();
         });
@@ -113,45 +100,27 @@ public class GameView extends JFrame implements KeyListener {
 
         addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent e) {
-                gameLoop.stop();
                 System.exit(0);
             }
         });
     }
 
-    /**
-     * Inicializa el jugador y carga el nivel indicado.
-     *
-     * @param playerName nombre del jugador
-     */
-    private void inicializarEntidades(String playerName) {
-        player = new RedPlayer(playerName, 15, MAP_H / 2 - 15);
-        cargarNivel(numeroNivel);
-    }
+    // ── Movimiento ────────────────────────────────────────────────────────────
 
     /**
-     * Carga el nivel correspondiente al número indicado.
-     *
-     * @param numero número del nivel a cargar
+     * Delega el movimiento del jugador a la fachada según las teclas presionadas.
      */
-    private void cargarNivel(int numero) {
-        switch (numero) {
-            case 1 -> nivelActual = new Level1();
-            case 2 -> nivelActual = new Level2();
-            case 3 -> nivelActual = new Level3();
-            default -> throw new DopoGameException(
-                DopoGameException.ErrorCode.NIVEL_NO_ENCONTRADO,
-                "El nivel " + numero + " no existe"
-            );
-        }
-        enemies = nivelActual.getEnemies();
-        coins   = nivelActual.getCoins();
+    private void handleMovement() {
+        if (up)    game.moverArriba(MAP_H);
+        if (down)  game.moverAbajo(MAP_H);
+        if (left)  game.moverIzquierda(MAP_W);
+        if (right) game.moverDerecha(MAP_W);
     }
 
     // ── Dibujo ────────────────────────────────────────────────────────────────
 
     /**
-     * Dibuja el HUD superior con nombre, muertes y monedas restantes.
+     * Dibuja el HUD con información del juego obtenida desde la fachada.
      *
      * @param g contexto gráfico
      */
@@ -161,8 +130,8 @@ public class GameView extends JFrame implements KeyListener {
         g.setColor(BORDER);
         g.fillRect(0, HUD_H - 2, MAP_W, 2);
 
-        // Cuadradito jugador
-        g.setColor(player.color);
+        // Cuadradito del jugador
+        g.setColor(game.getPlayer().color);
         g.fillRect(12, 15, 18, 18);
         g.setColor(Color.BLACK);
         g.drawRect(12, 15, 18, 18);
@@ -170,19 +139,19 @@ public class GameView extends JFrame implements KeyListener {
         // Nombre y muertes
         g.setFont(new Font("Arial", Font.BOLD, 13));
         g.setColor(HUD_TEXT);
-        g.drawString(player.name, 38, 28);
+        g.drawString(game.getPlayer().name, 38, 28);
         g.setFont(new Font("Arial", Font.PLAIN, 11));
         g.setColor(new Color(80, 80, 100));
-        g.drawString("Muertes: " + deaths, 38, 42);
+        g.drawString("Muertes: " + game.getDeaths(), 38, 42);
 
         // Nivel actual
         g.setFont(new Font("Arial", Font.BOLD, 13));
         g.setColor(HUD_TEXT);
-        g.drawString("Nivel " + numeroNivel + ": " + nivelActual.getNombre(),
-            MAP_W / 2 - 80, 28);
+        g.drawString("Nivel " + game.getNumeroNivel() + ": " + game.getNombreNivel(),
+                MAP_W / 2 - 80, 28);
 
         // Monedas
-        long left = coins.stream().filter(c -> !c.collected).count();
+        long left = game.getMonedasRestantes();
         g.setColor(Color.BLACK);
         g.fillOval(MAP_W / 2 - 62, 33, 18, 18);
         g.setColor(new Color(255, 215, 0));
@@ -190,7 +159,7 @@ public class GameView extends JFrame implements KeyListener {
         g.setFont(new Font("Arial", Font.BOLD, 11));
         g.setColor(left == 0 ? new Color(0, 160, 60) : HUD_TEXT);
         g.drawString(left == 0 ? "¡Ve a la meta!" : left + " monedas",
-            MAP_W / 2 - 42, 46);
+                MAP_W / 2 - 42, 46);
 
         // Controles
         g.setFont(new Font("Arial", Font.PLAIN, 11));
@@ -211,6 +180,22 @@ public class GameView extends JFrame implements KeyListener {
         for (int x = 0; x <= MAP_W; x += CELL) g.drawLine(x, 0, x, MAP_H);
         for (int y = 0; y <= MAP_H; y += CELL) g.drawLine(0, y, MAP_W, y);
         g.setStroke(new BasicStroke(1f));
+    }
+
+    /**
+     * Dibuja las paredes del nivel obtenidas desde la fachada.
+     *
+     * @param g contexto gráfico
+     */
+    private void drawWalls(Graphics2D g) {
+        for (Wall w : game.getWalls()) {
+            g.setColor(WALL_COLOR);
+            g.fillRect(w.x, w.y, w.width, w.height);
+            g.setColor(new Color(50, 50, 70));
+            g.setStroke(new BasicStroke(1.5f));
+            g.drawRect(w.x, w.y, w.width, w.height);
+            g.setStroke(new BasicStroke(1f));
+        }
     }
 
     /**
@@ -243,12 +228,12 @@ public class GameView extends JFrame implements KeyListener {
     }
 
     /**
-     * Dibuja las monedas no recolectadas.
+     * Dibuja las monedas no recolectadas obtenidas desde la fachada.
      *
      * @param g contexto gráfico
      */
     private void drawCoins(Graphics2D g) {
-        for (Coin c : coins) {
+        for (Coin c : game.getCoins()) {
             if (c.collected) continue;
             g.setColor(Color.BLACK);
             g.fillOval(c.x - 3, c.y - 3, c.size + 6, c.size + 6);
@@ -258,12 +243,12 @@ public class GameView extends JFrame implements KeyListener {
     }
 
     /**
-     * Dibuja los enemigos en el tablero.
+     * Dibuja los enemigos obtenidos desde la fachada.
      *
      * @param g contexto gráfico
      */
     private void drawEnemies(Graphics2D g) {
-        for (BasicEnemy e : enemies) {
+        for (BasicEnemy e : game.getEnemies()) {
             g.setColor(Color.BLACK);
             g.fillOval(e.x - 4, e.y - 4, e.size + 8, e.size + 8);
             g.setColor(new Color(30, 100, 220));
@@ -272,15 +257,17 @@ public class GameView extends JFrame implements KeyListener {
     }
 
     /**
-     * Dibuja el jugador en el tablero.
+     * Dibuja el jugador obtenido desde la fachada.
      *
      * @param g contexto gráfico
      */
     private void drawPlayer(Graphics2D g) {
         g.setColor(Color.BLACK);
-        g.fillRect(player.x - 4, player.y - 4, player.size + 8, player.size + 8);
-        g.setColor(player.color);
-        g.fillRect(player.x, player.y, player.size, player.size);
+        g.fillRect(game.getPlayer().x - 4, game.getPlayer().y - 4,
+                game.getPlayer().size + 8, game.getPlayer().size + 8);
+        g.setColor(game.getPlayer().color);
+        g.fillRect(game.getPlayer().x, game.getPlayer().y,
+                game.getPlayer().size, game.getPlayer().size);
     }
 
     /**
@@ -296,7 +283,7 @@ public class GameView extends JFrame implements KeyListener {
     }
 
     /**
-     * Dibuja la pantalla de nivel completado sobre el tablero.
+     * Dibuja la pantalla de nivel completado con estadísticas.
      *
      * @param g contexto gráfico
      */
@@ -321,14 +308,14 @@ public class GameView extends JFrame implements KeyListener {
 
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.setColor(new Color(40, 40, 40));
-        g.drawString("Jugador: " + player.name,   MAP_W / 2 - 80, by + 90);
-        g.drawString("Nivel:   " + nivelActual.getNombre(), MAP_W / 2 - 80, by + 112);
-        g.drawString("Muertes: " + deaths,         MAP_W / 2 - 80, by + 134);
+        g.drawString("Jugador: " + game.getPlayer().name,  MAP_W / 2 - 80, by + 90);
+        g.drawString("Nivel:   " + game.getNombreNivel(),  MAP_W / 2 - 80, by + 112);
+        g.drawString("Muertes: " + game.getDeaths(),       MAP_W / 2 - 80, by + 134);
 
-        if (numeroNivel < 3) {
+        if (game.hayNivelSiguiente()) {
             g.setFont(new Font("Arial", Font.BOLD, 13));
             g.setColor(new Color(0, 100, 180));
-            String sig = "Presiona ENTER para el nivel " + (numeroNivel + 1);
+            String sig = "Presiona ENTER para el nivel " + (game.getNumeroNivel() + 1);
             fm = g.getFontMetrics();
             g.drawString(sig, MAP_W / 2 - fm.stringWidth(sig) / 2, by + 170);
         }
@@ -338,91 +325,6 @@ public class GameView extends JFrame implements KeyListener {
         String esc = "Presiona ESC para volver al menú";
         fm = g.getFontMetrics();
         g.drawString(esc, MAP_W / 2 - fm.stringWidth(esc) / 2, by + 195);
-    }
-
-    // ── Lógica ────────────────────────────────────────────────────────────────
-
-    /**
-     * Mueve el jugador según las teclas presionadas,
-     * manteniéndolo dentro de los límites del tablero.
-     */
-    private void handleMovement() {
-        if (up)    player.y = Math.max(0, player.y - (int) player.speed);
-        if (down)  player.y = Math.min(MAP_H - player.size, player.y + (int) player.speed);
-        if (left)  player.x = Math.max(0, player.x - (int) player.speed);
-        if (right) player.x = Math.min(MAP_W - player.size, player.x + (int) player.speed);
-    }
-
-    /**
-     * Revisa si el jugador tocó un enemigo o recolectó una moneda.
-     * Al tocar un enemigo reinicia el nivel actual.
-     */
-    private void checkCollisions() {
-        Rectangle pb = new Rectangle(player.x, player.y, player.size, player.size);
-
-        for (BasicEnemy e : enemies) {
-            if (new Rectangle(e.x, e.y, e.size, e.size).intersects(pb)) {
-                deaths++;
-                resetNivel();
-                return;
-            }
-        }
-
-        for (Coin c : coins) {
-            if (!c.collected && new Rectangle(c.x, c.y, c.size, c.size).intersects(pb)) {
-                c.collected = true;
-            }
-        }
-    }
-
-    /**
-     * Verifica si el jugador llegó a la zona final con todas las monedas.
-     * Si se cumple marca el nivel como completado.
-     */
-    private void checkNivelCompleto() {
-        if (!nivelActual.todasLasMonedasRecolectadas()) return;
-
-        Rectangle pb        = new Rectangle(player.x, player.y, player.size, player.size);
-        Rectangle zonaFinal = new Rectangle(MAP_W - SAFE_W, SAFE_Y, SAFE_W, SAFE_H);
-
-        if (zonaFinal.intersects(pb)) {
-            nivelCompleto = true;
-            gameLoop.stop();
-        }
-    }
-
-    /**
-     * Reinicia el nivel actual a su estado original
-     * y regresa el jugador al spawn.
-     */
-    private void resetNivel() {
-        nivelActual.reiniciar();
-        enemies  = nivelActual.getEnemies();
-        coins    = nivelActual.getCoins();
-        player.x = player.spawnX;
-        player.y = player.spawnY;
-    }
-
-    /**
-     * Avanza al siguiente nivel si existe.
-     */
-    private void siguienteNivel() {
-        numeroNivel++;
-        nivelCompleto = false;
-        deaths        = 0;
-        cargarNivel(numeroNivel);
-        player.x = player.spawnX;
-        player.y = player.spawnY;
-        gameLoop.start();
-    }
-
-    /**
-     * Detiene el game loop, cierra la ventana y regresa al menú anterior.
-     */
-    private void exitToMenu() {
-        gameLoop.stop();
-        dispose();
-        previous.setVisible(true);
     }
 
     // ── KeyListener ───────────────────────────────────────────────────────────
@@ -436,9 +338,9 @@ public class GameView extends JFrame implements KeyListener {
 
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) exitToMenu();
 
-        if (e.getKeyCode() == KeyEvent.VK_ENTER && nivelCompleto) {
-            if (numeroNivel < 3) {
-                siguienteNivel();
+        if (e.getKeyCode() == KeyEvent.VK_ENTER && game.isNivelCompleto()) {
+            if (game.hayNivelSiguiente()) {
+                game.siguienteNivel();
             } else {
                 exitToMenu();
             }
@@ -454,4 +356,13 @@ public class GameView extends JFrame implements KeyListener {
     }
 
     @Override public void keyTyped(KeyEvent e) {}
+
+    /**
+     * Detiene el game loop, cierra la ventana y regresa al menú anterior.
+     */
+    private void exitToMenu() {
+        gameLoop.stop();
+        dispose();
+        previous.setVisible(true);
+    }
 }
