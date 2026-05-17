@@ -262,6 +262,15 @@ public class GameFacade {
     // ── Getters ───────────────────────────────────────────────────────────────
 
     /**
+     * Retorna las zonas seguras del nivel actual.
+     *
+     * @return lista de zonas seguras
+     */
+    public List<java.awt.Rectangle> getZonasSeguras() {
+        return nivelActual.getZonasSeguras();
+    }
+    
+    /**
      * Retorna el jugador actual.
      *
      * @return jugador
