@@ -5,6 +5,7 @@ import domain.levels.Level1;
 import domain.levels.Level2;
 import domain.levels.Level3;
 import exceptions.DopoGameException;
+import java.awt.Rectangle;
 import java.util.List;
 
 /**
@@ -19,6 +20,7 @@ public class GameFacade {
     private int numeroNivel;
     private int deaths;
     private boolean nivelCompleto;
+    private boolean pausado;
 
     /**
      * Crea la fachada e inicializa el estado del juego.
@@ -38,6 +40,7 @@ public class GameFacade {
         this.numeroNivel   = 1;
         this.deaths        = 0;
         this.nivelCompleto = false;
+        this.pausado       = false;
         cargarNivel(numeroNivel);
     }
 
@@ -49,8 +52,13 @@ public class GameFacade {
      * @param mapH alto del mapa en píxeles
      */
     public void moverArriba(int mapH) {
+        int oldX = player.x;
+        int oldY = player.y;
         player.y = Math.max(0, player.y - (int) player.speed);
-        verificarColisionParedes();
+        if (colisionaConPared()) {
+            player.x = oldX;
+            player.y = oldY;
+        }
     }
 
     /**
@@ -59,8 +67,13 @@ public class GameFacade {
      * @param mapH alto del mapa en píxeles
      */
     public void moverAbajo(int mapH) {
+        int oldX = player.x;
+        int oldY = player.y;
         player.y = Math.min(mapH - player.size, player.y + (int) player.speed);
-        verificarColisionParedes();
+        if (colisionaConPared()) {
+            player.x = oldX;
+            player.y = oldY;
+        }
     }
 
     /**
@@ -69,8 +82,13 @@ public class GameFacade {
      * @param mapW ancho del mapa en píxeles
      */
     public void moverIzquierda(int mapW) {
+        int oldX = player.x;
+        int oldY = player.y;
         player.x = Math.max(0, player.x - (int) player.speed);
-        verificarColisionParedes();
+        if (colisionaConPared()) {
+            player.x = oldX;
+            player.y = oldY;
+        }
     }
 
     /**
@@ -79,8 +97,13 @@ public class GameFacade {
      * @param mapW ancho del mapa en píxeles
      */
     public void moverDerecha(int mapW) {
+        int oldX = player.x;
+        int oldY = player.y;
         player.x = Math.min(mapW - player.size, player.x + (int) player.speed);
-        verificarColisionParedes();
+        if (colisionaConPared()) {
+            player.x = oldX;
+            player.y = oldY;
+        }
     }
 
     // ── Lógica del juego ──────────────────────────────────────────────────────
@@ -105,7 +128,7 @@ public class GameFacade {
      * @return true si el jugador murió en esta verificación
      */
     public boolean verificarColisiones() {
-        java.awt.Rectangle pb = getPlayerBounds();
+        Rectangle pb = getPlayerBounds();
 
         for (BasicEnemy e : nivelActual.getEnemies()) {
             if (getEnemyBounds(e).intersects(pb)) {
@@ -133,7 +156,7 @@ public class GameFacade {
      * @param zonaFinal rectángulo de la zona final del mapa
      * @return true si el nivel fue completado
      */
-    public boolean verificarNivelCompleto(java.awt.Rectangle zonaFinal) {
+    public boolean verificarNivelCompleto(Rectangle zonaFinal) {
         if (!nivelActual.todasLasMonedasRecolectadas()) return false;
 
         if (zonaFinal.intersects(getPlayerBounds())) {
@@ -157,6 +180,13 @@ public class GameFacade {
         player.x = player.spawnX;
         player.y = player.spawnY;
         return true;
+    }
+
+    /**
+     * Alterna entre pausado y en juego.
+     */
+    public void togglePausa() {
+        pausado = !pausado;
     }
 
     // ── Métodos privados ──────────────────────────────────────────────────────
@@ -188,18 +218,16 @@ public class GameFacade {
     }
 
     /**
-     * Verifica si el jugador colisiona con alguna pared
-     * y revierte su posición si es así.
+     * Verifica si el jugador colisiona con alguna pared.
+     *
+     * @return true si hay colisión con alguna pared
      */
-    private void verificarColisionParedes() {
-        java.awt.Rectangle pb = getPlayerBounds();
+    private boolean colisionaConPared() {
+        Rectangle pb = getPlayerBounds();
         for (Wall w : nivelActual.getWalls()) {
-            if (w.collidesWith(pb)) {
-                player.x = player.spawnX;
-                player.y = player.spawnY;
-                break;
-            }
+            if (w.collidesWith(pb)) return true;
         }
+        return false;
     }
 
     /**
@@ -207,8 +235,8 @@ public class GameFacade {
      *
      * @return rectángulo con posición y tamaño del jugador
      */
-    private java.awt.Rectangle getPlayerBounds() {
-        return new java.awt.Rectangle(player.x, player.y, player.size, player.size);
+    private Rectangle getPlayerBounds() {
+        return new Rectangle(player.x, player.y, player.size, player.size);
     }
 
     /**
@@ -217,8 +245,8 @@ public class GameFacade {
      * @param e enemigo del que obtener los límites
      * @return rectángulo con posición y tamaño del enemigo
      */
-    private java.awt.Rectangle getEnemyBounds(BasicEnemy e) {
-        return new java.awt.Rectangle(e.x, e.y, e.size, e.size);
+    private Rectangle getEnemyBounds(BasicEnemy e) {
+        return new Rectangle(e.x, e.y, e.size, e.size);
     }
 
     /**
@@ -227,8 +255,8 @@ public class GameFacade {
      * @param c moneda de la que obtener los límites
      * @return rectángulo con posición y tamaño de la moneda
      */
-    private java.awt.Rectangle getCoinBounds(Coin c) {
-        return new java.awt.Rectangle(c.x, c.y, c.size, c.size);
+    private Rectangle getCoinBounds(Coin c) {
+        return new Rectangle(c.x, c.y, c.size, c.size);
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────
@@ -305,4 +333,11 @@ public class GameFacade {
      * @return true si existe un nivel siguiente
      */
     public boolean hayNivelSiguiente() { return numeroNivel < 3; }
+
+    /**
+     * Indica si el juego está pausado.
+     *
+     * @return true si está pausado
+     */
+    public boolean isPausado() { return pausado; }
 }
